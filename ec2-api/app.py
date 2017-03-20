@@ -20,9 +20,9 @@ import flask
 '''
 auth = HTTPBasicAuth()
 
-client = MongoClient('mongodb://ds153179.mlab.com:53179/')
+client = MongoClient('mongodb://ds153978179.mlab.com:53179/')
 db = client['ec2-api']
-db.authenticate('test','123456')
+db.authenticate('test','gvh5678')
 collection = db['data']
 
 app = Flask(__name__)
