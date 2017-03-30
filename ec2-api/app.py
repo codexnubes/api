@@ -19,10 +19,15 @@ import flask
 /api/v1.0/query?date=2017-02-10&region=us-east-1
 '''
 auth = HTTPBasicAuth()
-
+'''
 client = MongoClient('mongodb://ds153978179.mlab.com:53179/')
 db = client['ec2-api']
 db.authenticate('test','gvh5678')
+collection = db['data']
+'''
+client = MongoClient('mongodb://ds153179.mlab.com:53179/')
+db = client['ec2-api']
+db.authenticate('test','123456')
 collection = db['data']
 
 app = Flask(__name__)
@@ -46,9 +51,9 @@ def index():
 def get_data():
    data_array=[]
 
-   for z in collection.find():
-        for x in z['regions'][0]['instanceTypes']:
-            data_array.append({'region':z['regions'][0]['region'], 'date': z['date'], 'time': z['time'], 'currency': z['currency'], 'os':x["os"], 'type':x['type'], 'price': x['price'], 'utilization': x['utilization']})
+   for all_data in collection.find():
+        for data_in_array in all_data['regions'][0]['instanceTypes']:
+            data_array.append({'region':all_data['regions'][0]['region'], 'date': all_data['date'], 'time': all_data['time'], 'currency': all_data['currency'], 'os':data_in_array["os"], 'type':data_in_array['type'], 'price': data_in_array['price'], 'utilization': data_in_array['utilization']})
 
    return jsonify({'result': data_array})
 
@@ -57,13 +62,12 @@ def get_data():
 def get_region(region):
     region_array=[]
     
-    t= collection.find()
-
-    for z in t:
-        for h in z:
-            if h == "regions":
-                for x in z[h][0]['instanceTypes']:
-                    region_array.append({'region':region, 'date': z['date'], 'time': z['time'], 'currency': z['currency'], 'os':x["os"], 'type':x['type'], 'price': x['price'], 'utilization': x['utilization']})
+    query = collection.find()
+    for all_data in query:
+        for region_data_array in all_data:
+            if region_data_array == "regions":
+                for get_price_data in all_data[region_data_array][0]['instanceTypes']:
+                    region_array.append({'region':region, 'date': all_data['date'], 'time': all_data['time'], 'currency': all_data['currency'], 'os':get_price_data["os"], 'type':get_price_data['type'], 'price': get_price_data['price'], 'utilization': get_price_data['utilization']})
 
     return jsonify({'result': region_array})
 
@@ -72,14 +76,14 @@ def get_region(region):
 def get_family(family):
     family_array=[]
 
-    t= collection.find()
-    for x in t:
-        for z in x['regions']:
-            for n in z:
-                if n == 'instanceTypes':
-                    for j in z[n]:                    
-                        if j['type'] == family:
-                            family_array.append(j)
+    query = collection.find()
+    for all_data in query:
+        for region_data_array in all_data['regions']:
+            for get_price_data in region_data_array:
+                if get_price_data == 'instanceTypes':
+                    for get_family_data_array in region_data_array[get_price_data]:                    
+                        if get_family_data_array['type'] == family:
+                            family_array.append(get_family_data_array)
     return jsonify({'result': family_array})
 
 @app.route('/api/v1.0/get_os/<os>', methods=['GET'])
@@ -87,14 +91,14 @@ def get_family(family):
 def get_os(os):
     os_array=[]
 
-    t= collection.find()
-    for x in t:
-        for z in x['regions']:
-            for n in z:
-                if n == 'instanceTypes':
-                    for j in z[n]:                       
-                        if j['os'] == os:
-                            os_array.append(j)
+    query = collection.find()
+    for all_data in query:
+        for region_data_array in all_data['regions']:
+            for get_price_data in region_data_array:
+                if get_price_data == 'instanceTypes':
+                    for get_os_data_array in region_data_array[get_price_data]:                       
+                        if get_os_data_array['os'] == os:
+                            os_array.append(get_os_data_array)
     return jsonify({'result': os_array})
 
 @app.route('/api/v1.0/query')
