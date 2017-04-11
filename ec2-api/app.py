@@ -19,12 +19,7 @@ import flask
 /api/v1.0/query?date=2017-02-10&region=us-east-1
 '''
 auth = HTTPBasicAuth()
-'''
-client = MongoClient('mongodb://ds153978179.mlab.com:53179/')
-db = client['ec2-api']
-db.authenticate('test','gvh5678')
-collection = db['data']
-'''
+
 client = MongoClient('mongodb://ds153179.mlab.com:53179/')
 db = client['ec2-api']
 db.authenticate('test','123456')
@@ -104,29 +99,35 @@ def get_os(os):
 @app.route('/api/v1.0/query')
 @auth.login_required
 def run():
-	parser = reqparse.RequestParser()
-	parser.add_argument('date', help= 'Invalid Date')
-	parser.add_argument('region', help = 'Invalid Region')
-	parser.add_argument('type',help = 'Invalid Type')
-	args = parser.parse_args()
+    parser = reqparse.RequestParser()
+    parser.add_argument('date', help= 'Invalid Date')
+    parser.add_argument('time', help= 'Invalid Time')
+    parser.add_argument('os', help= 'Invalid OS Type')
+    parser.add_argument('region', help = 'Invalid Region')
+    parser.add_argument('type',help = 'Invalid Type')
+    args = parser.parse_args()
 
-	if args['date'] ==None :
-		return jsonify(date=args['date'],region = args['region'],type = args['type'])
-	else:
-		if args['type']==None and args['region'] == None:
-			return json_util.dumps(collection.find({'date':args['date']}))
-		elif args['type'] ==None:
-			return json_util.dumps(collection.find({'date':args['date'],'regions.region':args['region']}))
-		else:
-			x = collection.find_one({'date':args['date'],'regions.region':args['region']})
-			if x!=None and x['regions']!=None and x['regions'][0]!=None:
-				for instance in x['regions'][0]['instanceTypes']:
-					if instance['type']==args['type']:
-						print(instance['price'])
-						return json_util.dumps(instance)
-				return json_util.dumps([])
-			else:
-				return json_util.dumps([])
+    if args['date'] ==None :
+        return jsonify(date=args['date'],time=args['time'],os=args['os'],region = args['region'],type = args['type'])
+    else:
+        if args['time']==None and args['os']==None and args['type']==None and args['region'] == None:
+            return json_util.dumps(collection.find({'date':args['date']}))
+        if args['os']==None and args['type']==None and args['region']==None:
+            return json_util.dumps(collection.find({'date':args['date'],'time':args['time']}))
+        if args['type']==None and args['region']==None:
+            return json_util.dumps(collection.find({'date':args['date'],'time':args['time'],'regions.instanceTypes.os':args['os']}))
+        elif args['type'] ==None:
+            return json_util.dumps(collection.find({'date':args['date'],'time':args['time'],'regions.instanceTypes.os':args['os'],'regions.region':args['region']}))
+        else:
+            x = collection.find_one({'date':args['date'],'time':args['time'],'regions.instanceTypes.os':args['os'],'regions.region':args['region']})
+            if x!=None and x['regions']!=None and x['regions'][0]!=None:
+                for instance in x['regions'][0]['instanceTypes']:
+                    if instance['type']==args['type']:
+                        print(instance['price'])
+                        return json_util.dumps(instance)
+                return json_util.dumps([])
+            else:
+                return json_util.dumps([])
 
 @app.errorhandler(404)
 def not_found(error):
