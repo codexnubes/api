@@ -125,9 +125,9 @@ def run():
                     if instance['type']==args['type']:
                         print(instance['price'])
                         return json_util.dumps(instance)
-                return json_util.dumps([])
+                return jsonify({'results': 'Input Error, Try again'})
             else:
-                return json_util.dumps([])
+                return jsonify({'results': 'Something went wrong, Try again'})
 
 @app.route('/api/v1.0/query_range')
 @auth.login_required
@@ -148,6 +148,8 @@ def query_range():
         if args['min_date']!=None and args['max_date']!=None and args['min_time']!=None and args['max_time']!=None:
             date_time_range_q = collection.find({'date': {'$gt': args['min_date'], '$lte': args['max_date']}, 'time': {'$gt': args['min_time'], '$lte': args['max_time']}})
             return json_util.dumps(date_time_range_q)
+        else:
+            return jsonify({'results': 'Input Error, Try again'})
 
 @app.route('/api/v1.0/query_more')
 @auth.login_required
@@ -163,11 +165,11 @@ def query_more():
     else:
         if args['regions']==None:
             return json_util.dumps(collection.find({'date':args['date']}))
-        if args['date']!=None and args['regions']!=None:
-            regions_more_q = collection.find({'date':args['date'],'regions.region': {'$all': [args['regions']]}})
+        if args['date']!=None and args['regions']!=None and args['types']!=None:
+            regions_more_q = collection.find({'date':args['date'],'regions.region': {'$all': [args['regions']]},'regions.instanceTypes.type': {'$all': [args['types']]}})
             return json_util.dumps(regions_more_q)
         else:
-            x = collection.find_one({'date':args['date'],'regions.region':args['regions']})
+            return jsonify({'results': 'Input Error, Try again'})
             
 @app.errorhandler(404)
 def not_found(error):
