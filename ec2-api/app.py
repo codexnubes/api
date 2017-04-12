@@ -155,6 +155,7 @@ def query_more():
     parser = reqparse.RequestParser()
     parser.add_argument('date', help= 'Invalid Date Input')
     parser.add_argument('regions', help= 'Invalid Regions Input')
+    parser.add_argument('types', help= 'Invalid Type Input')
     args = parser.parse_args()
 
     if args['date']==None:
@@ -165,6 +166,8 @@ def query_more():
         if args['date']!=None and args['regions']!=None:
             regions_more_q = collection.find({'date':args['date'],'regions.region': {'$all': [args['regions']]}})
             return json_util.dumps(regions_more_q)
+        else:
+            x = collection.find_one({'date':args['date'],'regions.region':args['regions']})
             
 @app.errorhandler(404)
 def not_found(error):
