@@ -129,6 +129,43 @@ def run():
             else:
                 return json_util.dumps([])
 
+@app.route('/api/v1.0/query_range')
+@auth.login_required
+def query_range():
+    parser = reqparse.RequestParser()
+    parser.add_argument('min_date', help= 'Invalid Minimum Date')
+    parser.add_argument('max_date', help= 'Invalid Maximum Date')
+    parser.add_argument('min_time', help= 'Invalid Minimum Time')
+    parser.add_argument('max_time', help= 'Invalid Maximum Time')
+    args = parser.parse_args()
+
+    if args['min_date']==None or args['max_date']==None:
+        return jsonify(min_date=args['min_date'],max_date=args['max_date'],min_time=args['min_time'],max_time=args['max_time'])
+    else:
+        if args['min_date']!=None and args['max_date']!=None:
+            date_range_q = collection.find({'date': {'$gt': args['min_date'], '$lte': args['max_date']}})
+            return json_util.dumps(date_range_q)
+        if args['min_date']!=None and args['max_date']!=None and args['min_time']!=None and args['max_time']!=None:
+            date_time_range_q = collection.find({'date': {'$gt': args['min_date'], '$lte': args['max_date']}, 'time': {'$gt': args['min_time'], '$lte': args['max_time']}})
+            return json_util.dumps(date_time_range_q)
+
+@app.route('/api/v1.0/query_more')
+@auth.login_required
+def query_more():
+    parser = reqparse.RequestParser()
+    parser.add_argument('date', help= 'Invalid Date Input')
+    parser.add_argument('regions', help= 'Invalid Regions Input')
+    args = parser.parse_args()
+
+    if args['date']==None:
+        return jsonify(date=args['date'],regions=args['regions'])
+    else:
+        if args['regions']==None:
+            return json_util.dumps(collection.find({'date':args['date']}))
+        if args['date']!=None and args['regions']!=None:
+            regions_more_q = collection.find({'date':args['date'],'regions.region': {'$all': [args['regions']]}})
+            return json_util.dumps(regions_more_q)
+            
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error': 'Not Found'}), 404)

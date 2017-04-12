@@ -1,3 +1,4 @@
+direct data points
 - date
 - time
 - region
@@ -5,3 +6,11 @@
 - type
 - cpu
 - ram
+
+ranges
+- data ranges
+- time ranges
+
+couple
+- couple of types
+- couple of regions
