@@ -20,10 +20,16 @@ import flask
 '''
 auth = HTTPBasicAuth()
 
+'''
 client = MongoClient('mongodb://ds153179.mlab.com:53179/')
 db = client['ec2-api']
 db.authenticate('test','123456')
 collection = db['data']
+'''
+
+client = MongoClient('mongodb://ec2-52-33-101-11.us-west-2.compute.amazonaws.com:27017')
+db = client['spot']
+collection = db['spotinstance']
 
 app = Flask(__name__)
 
@@ -137,19 +143,24 @@ def query_range():
     parser.add_argument('max_date', help= 'Invalid Maximum Date')
     parser.add_argument('min_time', help= 'Invalid Minimum Time')
     parser.add_argument('max_time', help= 'Invalid Maximum Time')
+    parser.add_argument('region', help= 'Invalid Region')
     args = parser.parse_args()
 
     if args['min_date']==None or args['max_date']==None:
         return jsonify(min_date=args['min_date'],max_date=args['max_date'],min_time=args['min_time'],max_time=args['max_time'])
     else:
-        if args['min_date']!=None and args['max_date']!=None:
-            date_range_q = collection.find({'date': {'$gt': args['min_date'], '$lte': args['max_date']}})
+        if args['min_time']==None and args['max_time']==None:
+            date_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}})
             return json_util.dumps(date_range_q)
-        if args['min_date']!=None and args['max_date']!=None and args['min_time']!=None and args['max_time']!=None:
-            date_time_range_q = collection.find({'date': {'$gt': args['min_date'], '$lte': args['max_date']}, 'time': {'$gt': args['min_time'], '$lte': args['max_time']}})
+        if args['region']==None:
+            date_time_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time']}})
             return json_util.dumps(date_time_range_q)
         else:
-            return jsonify({'results': 'Input Error, Try again'})
+            date_time_region_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time'], 'regions.region': args['region']}})
+            if date_time_region_range_q!=None:
+                return json_util.dumps(date_time_region_range_q)
+            else:
+                return jsonify({'results': 'Input Error, Try again'})
 
 @app.route('/api/v1.0/query_more')
 @auth.login_required
@@ -186,5 +197,5 @@ def bad_request(error):
 app.run(host= '0.0.0.0')
 	
 if __name__ == '__main__':
-	app.run(debug=True, port=80)
+	app.run(debug=True, port=5000)
 
