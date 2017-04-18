@@ -8,7 +8,7 @@
 # Short-Description: AWS spot instance price REST API
 # Description:       AWS spot instance price collecting REST API
 
-DIR=/home/ec2-user/data/API/api/ec2-api
+DIR=/home/chathuranga/Projects/AWS_Spot_Price/python/api/ec2-api
 DAEMON=$DIR/app.py
 DAEMON_NAME=ec2-spot-api
 DAEMON_OPTS=""

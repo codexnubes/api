@@ -144,6 +144,7 @@ def query_range():
     parser.add_argument('min_time', help= 'Invalid Minimum Time')
     parser.add_argument('max_time', help= 'Invalid Maximum Time')
     parser.add_argument('region', help= 'Invalid Region')
+    parser.add_argument('type', help= 'Invalid Type')
     args = parser.parse_args()
 
     if args['min_date']==None or args['max_date']==None:
@@ -152,13 +153,16 @@ def query_range():
         if args['min_time']==None and args['max_time']==None:
             date_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}})
             return json_util.dumps(date_range_q)
-        if args['region']==None:
+        if args['region']==None and args['type']==None:
             date_time_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time']}})
             return json_util.dumps(date_time_range_q)
+        if args['type']==None:
+            date_time_region_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time']}, 'regions.region': args['region']})
+            return json_util.dumps(date_time_region_range_q)
         else:
-            date_time_region_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time'], 'regions.region': args['region']}})
-            if date_time_region_range_q!=None:
-                return json_util.dumps(date_time_region_range_q)
+            date_time_region_type_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time']}, 'regions.region': args['region'], 'regions.instanceTypes.type': args['type']})
+            if date_time_region_type_range_q!=None:
+                return json_util.dumps(date_time_region_type_range_q)
             else:
                 return jsonify({'results': 'Input Error, Try again'})
 
