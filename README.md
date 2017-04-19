@@ -1,19 +1,62 @@
-EC2 Rest API
+# Python REST API - AWS Spot Data
 
-###Startup Instructions
-01. ```cd ec2-api```
-02. ```rm -rf flask```
-03. ```virtualenv flask```
-04. ```flask/bin/pip install flask```
-05. ```flask/bin/pip install flask_restful```
-06. ```flask/bin/pip install flask_httpauth```
-07. ```flask/bin/pip install pymongo```
+Python REST API to get AWS hourly spot instance prices.
 
-###Update Database Config
-```client = MongoClient('mongodb://ds153978179.mlab.com:53179/')```
-```db = client['ec2-api']```
-```db.authenticate('test','gvh5678')```
-```collection = db['data']```
+## Getting Started
 
-###Run API
-```./app.py```
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+
+### Prerequisites
+
+To start API you will need to have python modules installed in virtual environment (Rec).
+
+```
+cd ec2-api
+rm -rf flask
+virtualenv flask
+flask/bin/pip install flask
+flask/bin/pip install flask_restful
+flask/bin/pip install flask_httpauth
+flask/bin/pip install pymongo
+flask/bin/pip install redis
+```
+
+### Installing
+
+Update mongodb and redis connections,
+
+```
+client = MongoClient('mongodb://ec2-52-33-101-11.us-west-2.compute.amazonaws.com:27017')
+db = client['spot']
+collection = db['spotinstance']
+```
+
+```
+host='127.0.0.1',
+port=6379,
+password='kiFYmWZB8F'
+```
+
+run application,
+
+```
+cd ec2-api
+./app.py
+```
+
+## Running the tests
+
+check the system with,
+http://localhost:5000
+
+hit to the endpoints.
+
+## Deployment
+
+Add additional notes about how to deploy this on a live system
+
+## Built With
+
+* [Flask](https://github.com/pallets/flask) - The web framework used
+* [Mongo](https://www.mongodb.com/) - Database
+* [Redis](https://redis.io/) - Caching
