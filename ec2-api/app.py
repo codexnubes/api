@@ -9,6 +9,7 @@ from pymongo import MongoClient
 from bson import json_util
 import pprint
 import flask
+import redis
 '''
 /api/v1.0/get_data/all
 /api/v1.0/get_region/<region>
@@ -20,6 +21,7 @@ import flask
 '''
 auth = HTTPBasicAuth()
 
+#mongo connection
 '''
 client = MongoClient('mongodb://ds153179.mlab.com:53179/')
 db = client['ec2-api']
@@ -30,6 +32,20 @@ collection = db['data']
 client = MongoClient('mongodb://ec2-52-33-101-11.us-west-2.compute.amazonaws.com:27017')
 db = client['spot']
 collection = db['spotinstance']
+
+#redis connection
+try:
+    conn = redis.StrictRedis(
+        host='ec2-52-33-101-11.us-west-2.compute.amazonaws.com',
+        port=6379,
+        password='kiFYmWZB8F'
+    )
+    print conn
+    conn.ping()
+    print 'Redis Connected!'
+except Exception as ex:
+    print 'Error:', ex
+    exit('Failed to connect redis, terminating')
 
 app = Flask(__name__)
 
@@ -117,7 +133,14 @@ def run():
         return jsonify(date=args['date'],time=args['time'],os=args['os'],region = args['region'],type = args['type'])
     else:
         if args['time']==None and args['os']==None and args['type']==None and args['region'] == None:
-            return json_util.dumps(collection.find({'date':args['date']}))
+            if conn.get("query_date") == None:
+                date_query = collection.find({'date':args['date']})
+                date_query_json = json_util.dumps(date_query)
+                conn.set("query_date", date_query_json)
+                return date_query_json
+            else:
+                redis_date_q = conn.get("query_date")
+                return redis_date_q
         if args['os']==None and args['type']==None and args['region']==None:
             return json_util.dumps(collection.find({'date':args['date'],'time':args['time']}))
         if args['type']==None and args['region']==None:
