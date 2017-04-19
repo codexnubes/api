@@ -183,8 +183,10 @@ def query_more():
     if args['date']==None:
         return jsonify(date=args['date'],regions=args['regions'])
     else:
-        if args['regions']==None:
+        if args['regions']==None and args['types']==None:
             return json_util.dumps(collection.find({'date':args['date']}))
+        if args['types']==None:
+            return json_util.dumps(collection.find({'date':args['date'], 'regions.region': {'$in': [args['regions']]}}))
         if args['date']!=None and args['regions']!=None and args['types']!=None:
             regions_more_q = collection.find({'date':args['date'],'regions.region': {'$all': [args['regions']]},'regions.instanceTypes.type': {'$all': [args['types']]}})
             return json_util.dumps(regions_more_q)
