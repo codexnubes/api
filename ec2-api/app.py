@@ -160,11 +160,16 @@ def query_range():
             date_time_region_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time']}, 'regions.region': args['region']})
             return json_util.dumps(date_time_region_range_q)
         else:
-            date_time_region_type_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time']}, 'regions.region': args['region'], 'regions.instanceTypes.type': args['type']})
-            if date_time_region_type_range_q!=None:
-                return json_util.dumps(date_time_region_type_range_q)
-            else:
-                return jsonify({'results': 'Input Error, Try again'})
+            type_array=[]
+            date_time_region_type_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time']}, 'regions.region': args['region']})
+            for all_data in date_time_region_type_range_q:
+                for region_data_array in all_data['regions']:
+                    for get_price_data in region_data_array:
+                        if get_price_data == 'instanceTypes':
+                            for get_type_data_array in region_data_array[get_price_data]:                    
+                                if get_type_data_array['type'] == args['type']:
+                                    type_array.append(get_type_data_array)
+            return jsonify({'results': type_array})
 
 @app.route('/api/v1.0/query_more')
 @auth.login_required
