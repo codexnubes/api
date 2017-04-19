@@ -36,7 +36,7 @@ collection = db['spotinstance']
 #redis connection
 try:
     conn = redis.StrictRedis(
-        host='ec2-52-33-101-11.us-west-2.compute.amazonaws.com',
+        host='127.0.0.1',
         port=6379,
         password='kiFYmWZB8F'
     )
@@ -66,13 +66,16 @@ def index():
 @app.route('/api/v1.0/get_data/all', methods=['GET'])
 @auth.login_required
 def get_data():
-   data_array=[]
-
-   for all_data in collection.find():
-        for data_in_array in all_data['regions'][0]['instanceTypes']:
-            data_array.append({'region':all_data['regions'][0]['region'], 'date': all_data['date'], 'time': all_data['time'], 'currency': all_data['currency'], 'os':data_in_array["os"], 'type':data_in_array['type'], 'price': data_in_array['price'], 'utilization': data_in_array['utilization']})
-
-   return jsonify({'result': data_array})
+    data_array=[]
+    if conn.get("cache_all_query") ==None:
+        for all_data in collection.find():
+            for data_in_array in all_data['regions'][0]['instanceTypes']:
+                data_array.append({'region':all_data['regions'][0]['region'], 'date': all_data['date'], 'time': all_data['time'], 'currency': all_data['currency'], 'os':data_in_array["os"], 'type':data_in_array['type'], 'price': data_in_array['price'], 'utilization': data_in_array['utilization']})
+        conn.set("cache_all_query", data_array)
+        return jsonify({'result': data_array})
+    else:
+        redis_all_q = conn.get("cache_all_query")
+        return redis_all_q
 
 @app.route('/api/v1.0/get_region/<region>', methods=['GET'])
 @auth.login_required
@@ -142,21 +145,48 @@ def run():
                 redis_date_q = conn.get("query_date")
                 return redis_date_q
         if args['os']==None and args['type']==None and args['region']==None:
-            return json_util.dumps(collection.find({'date':args['date'],'time':args['time']}))
-        if args['type']==None and args['region']==None:
-            return json_util.dumps(collection.find({'date':args['date'],'time':args['time'],'regions.instanceTypes.os':args['os']}))
-        elif args['type'] ==None:
-            return json_util.dumps(collection.find({'date':args['date'],'time':args['time'],'regions.instanceTypes.os':args['os'],'regions.region':args['region']}))
-        else:
-            x = collection.find_one({'date':args['date'],'time':args['time'],'regions.instanceTypes.os':args['os'],'regions.region':args['region']})
-            if x!=None and x['regions']!=None and x['regions'][0]!=None:
-                for instance in x['regions'][0]['instanceTypes']:
-                    if instance['type']==args['type']:
-                        print(instance['price'])
-                        return json_util.dumps(instance)
-                return jsonify({'results': 'Input Error, Try again'})
+            if conn.get("query_time") == None:
+                time_query = collection.find({'date':args['date'],'time':args['time']})
+                time_query_json = json_util.dumps(time_query)
+                conn.set("query_time", time_query_json)
+                return time_query_json
             else:
-                return jsonify({'results': 'Something went wrong, Try again'})
+                redis_time_q = conn.get("query_time")
+                return redis_time_q
+        if args['type']==None and args['region']==None:
+            if conn.get("query_os") == None:
+                os_query = collection.find({'date':args['date'],'time':args['time'],'regions.instanceTypes.os':args['os']})
+                os_query_json = json_util.dumps(os_query)
+                conn.set("query_os", os_query_json)
+                return os_query_json
+            else:
+                redis_os_q = conn.get("query_os")
+                return redis_os_q
+        elif args['type'] ==None:
+            if conn.get("query_region") == None:
+                region_query = collection.find({'date':args['date'],'time':args['time'],'regions.instanceTypes.os':args['os'],'regions.region':args['region']})
+                region_query_json = json_util.dumps(region_query)
+                conn.set("query_region", region_query_json)
+                return region_query_json
+            else:
+                redis_region_q = conn.get("query_region")
+                return redis_region_q
+        else:
+            if conn.get("query_type") == None: 
+                x = collection.find_one({'date':args['date'],'time':args['time'],'regions.instanceTypes.os':args['os'],'regions.region':args['region']})
+                if x!=None and x['regions']!=None and x['regions'][0]!=None:
+                    for instance in x['regions'][0]['instanceTypes']:
+                        if instance['type']==args['type']:
+                            print(instance['price'])
+                            type_query_json = json_util.dumps(instance)
+                            conn.set("query_type", type_query_json)
+                            return type_query_json
+                    return jsonify({'results': 'Input Error, Try again'})
+                else:
+                    return jsonify({'results': 'Something went wrong, Try again'})
+            else:
+                redis_type_q = conn.get("query_type")
+                return redis_type_q
 
 @app.route('/api/v1.0/query_range')
 @auth.login_required
