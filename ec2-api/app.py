@@ -147,11 +147,11 @@ def get_os(os):
         redis_os_q = conn.get("cache_os_query")
         return redis_os_q
 
-@app.route('/api/v1.0/query')
+@app.route('/api/v1.0/query', methods=['GET'])
 @auth.login_required
 def run():
     parser = reqparse.RequestParser()
-    parser.add_argument('date', help= 'Invalid Date')
+    parser.add_argument('date', required=True, help= 'Required, Invalid Date')
     parser.add_argument('time', help= 'Invalid Time')
     parser.add_argument('os', help= 'Invalid OS Type')
     parser.add_argument('region', help = 'Invalid Region')
@@ -214,12 +214,12 @@ def run():
                 redis_type_q = conn.get("query_type")
                 return redis_type_q
 
-@app.route('/api/v1.0/query_range')
+@app.route('/api/v1.0/query_range', methods=['GET'])
 @auth.login_required
 def query_range():
     parser = reqparse.RequestParser()
-    parser.add_argument('min_date', required=True, help= 'Invalid Minimum Date')
-    parser.add_argument('max_date', required=True, help= 'Invalid Maximum Date')
+    parser.add_argument('min_date', required=True, help= 'Required, Invalid Minimum Date')
+    parser.add_argument('max_date', required=True, help= 'Required, Invalid Maximum Date')
     parser.add_argument('min_time', help= 'Invalid Minimum Time')
     parser.add_argument('max_time', help= 'Invalid Maximum Time')
     parser.add_argument('region', help= 'Invalid Region')
@@ -291,7 +291,7 @@ def query_range():
                 redis_type_q = conn.get("type_range")
                 return redis_type_q
 
-@app.route('/api/v1.0/query_more')
+@app.route('/api/v1.0/query_more', methods=['GET'])
 @auth.login_required
 def query_more():
     parser = reqparse.RequestParser()
