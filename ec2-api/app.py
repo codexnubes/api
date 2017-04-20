@@ -40,7 +40,7 @@ address = 'ec2-52-33-101-11.us-west-2.compute.amazonaws.com'
 port = 27017
 try:
     s.connect((address, port))
-    print s
+    print (address, port)
     print 'MongoDB Connected!'
 except Exception as e:
     print s
@@ -230,24 +230,45 @@ def query_range():
         return jsonify(min_date=args['min_date'],max_date=args['max_date'],min_time=args['min_time'],max_time=args['max_time'])
     else:
         if args['min_time']==None and args['max_time']==None:
+            date_range_array=[]
             date_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}})
-            return json_util.dumps(date_range_q)
+            for all_data in date_range_q:
+                for region_data_array in all_data['regions']:
+                    for get_price_data in region_data_array:
+                        if get_price_data == 'instanceTypes':
+                            for get_type_data_array in region_data_array[get_price_data]:
+                                date_range_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
+            return jsonify({'results': date_range_array})
         if args['region']==None and args['type']==None:
+            date_time_range_array=[]
             date_time_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time']}})
-            return json_util.dumps(date_time_range_q)
+            for all_data in date_time_range_q:
+                for region_data_array in all_data['regions']:
+                    for get_price_data in region_data_array:
+                        if get_price_data == 'instanceTypes':
+                            for get_type_data_array in region_data_array[get_price_data]:
+                                date_time_range_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
+            return jsonify({'results': date_time_range_array})
         if args['type']==None:
+            date_time_region_range_array=[]
             date_time_region_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time']}, 'regions.region': args['region']})
-            return json_util.dumps(date_time_region_range_q)
+            for all_data in date_time_region_range_q:
+                for region_data_array in all_data['regions']:
+                    for get_price_data in region_data_array:
+                        if get_price_data == 'instanceTypes':
+                            for get_type_data_array in region_data_array[get_price_data]: 
+                                date_time_region_range_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
+            return jsonify({'results': date_time_region_range_array})
         else:
             type_array=[]
             date_time_region_type_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time']}, 'regions.region': args['region']})
             for all_data in date_time_region_type_range_q:
                 for region_data_array in all_data['regions']:
                     for get_price_data in region_data_array:
-                        if get_price_data == 'instanceTypes':
+                         if get_price_data == 'instanceTypes':
                             for get_type_data_array in region_data_array[get_price_data]:                    
                                 if get_type_data_array['type'] == args['type']:
-                                    type_array.append(get_type_data_array)
+                                    type_array.append({'region':region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
             return jsonify({'results': type_array})
 
 @app.route('/api/v1.0/query_more')
