@@ -228,8 +228,8 @@ def query_range():
 @auth.login_required
 def query_more():
     parser = reqparse.RequestParser()
-    parser.add_argument('date', help= 'Invalid Date Input')
-    parser.add_argument('regions', help= 'Invalid Regions Input')
+    parser.add_argument('date', required=True, help= 'Required, Invalid Date Input')
+    parser.add_argument('regions', type=list, location='json', help= 'Invalid Reggions Input')
     parser.add_argument('types', help= 'Invalid Type Input')
     args = parser.parse_args()
 
@@ -239,9 +239,9 @@ def query_more():
         if args['regions']==None and args['types']==None:
             return json_util.dumps(collection.find({'date':args['date']}))
         if args['types']==None:
-            return json_util.dumps(collection.find({'date':args['date'], 'regions.region': {'$in': [args['regions']]}}))
+            return json_util.dumps(collection.find({'date':args['date'], 'regions.region': {'$all': args['regions']}}))
         if args['date']!=None and args['regions']!=None and args['types']!=None:
-            regions_more_q = collection.find({'date':args['date'],'regions.region': {'$all': [args['regions']]},'regions.instanceTypes.type': {'$all': [args['types']]}})
+            regions_more_q = collection.find({'date':args['date'],'regions.region': {'$all': args['regions']},'regions.instanceTypes.type': {'$all': args['types']}})
             return json_util.dumps(regions_more_q)
         else:
             return jsonify({'results': 'Input Error, Try again'})

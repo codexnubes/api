@@ -49,11 +49,7 @@ cd ec2-api
 check the system with,
 http://localhost:5000
 
-hit to the endpoints.
-
-## Deployment
-
-Add additional notes about how to deploy this on a live system
+hit to the endpoints as per the home page.
 
 ## Built With
 
