@@ -9,6 +9,7 @@ from pymongo import MongoClient
 from bson import json_util
 import pprint
 import flask
+import socket
 import redis
 '''
 /api/v1.0/get_data/all
@@ -32,6 +33,20 @@ collection = db['data']
 client = MongoClient('mongodb://ec2-52-33-101-11.us-west-2.compute.amazonaws.com:27017')
 db = client['spot']
 collection = db['spotinstance']
+
+#test mongo connection
+s = socket.socket()
+address = 'ec2-52-33-101-11.us-west-2.compute.amazonaws.com'
+port = 27017
+try:
+    s.connect((address, port))
+    print s
+    print 'MongoDB Connected!'
+except Exception as e:
+    print s
+    print("Failed to connect MongoDB %s:%d. Exception is %s" % (address, port, e))
+finally:
+    s.close()
 
 #redis connection
 try:
