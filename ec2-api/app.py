@@ -218,8 +218,8 @@ def run():
 @auth.login_required
 def query_range():
     parser = reqparse.RequestParser()
-    parser.add_argument('min_date', help= 'Invalid Minimum Date')
-    parser.add_argument('max_date', help= 'Invalid Maximum Date')
+    parser.add_argument('min_date', required=True, help= 'Invalid Minimum Date')
+    parser.add_argument('max_date', required=True, help= 'Invalid Maximum Date')
     parser.add_argument('min_time', help= 'Invalid Minimum Time')
     parser.add_argument('max_time', help= 'Invalid Maximum Time')
     parser.add_argument('region', help= 'Invalid Region')
@@ -231,45 +231,65 @@ def query_range():
     else:
         if args['min_time']==None and args['max_time']==None:
             date_range_array=[]
-            date_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}})
-            for all_data in date_range_q:
-                for region_data_array in all_data['regions']:
-                    for get_price_data in region_data_array:
-                        if get_price_data == 'instanceTypes':
-                            for get_type_data_array in region_data_array[get_price_data]:
-                                date_range_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
-            return jsonify({'results': date_range_array})
+            if conn.get("date_range") ==None:
+                date_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}})
+                for all_data in date_range_q:
+                    for region_data_array in all_data['regions']:
+                        for get_price_data in region_data_array:
+                            if get_price_data == 'instanceTypes':
+                                for get_type_data_array in region_data_array[get_price_data]:
+                                    date_range_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
+                conn.set("date_range", date_range_array)
+                return jsonify({'results': date_range_array})
+            else:
+                redis_date_range_q = conn.get("date_range")
+                return redis_date_range_q
         if args['region']==None and args['type']==None:
             date_time_range_array=[]
-            date_time_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time']}})
-            for all_data in date_time_range_q:
-                for region_data_array in all_data['regions']:
-                    for get_price_data in region_data_array:
-                        if get_price_data == 'instanceTypes':
-                            for get_type_data_array in region_data_array[get_price_data]:
-                                date_time_range_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
-            return jsonify({'results': date_time_range_array})
+            if conn.get("date_time_range") ==None:
+                date_time_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time']}})
+                for all_data in date_time_range_q:
+                    for region_data_array in all_data['regions']:
+                        for get_price_data in region_data_array:
+                            if get_price_data == 'instanceTypes':
+                                for get_type_data_array in region_data_array[get_price_data]:
+                                    date_time_range_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
+                conn.set("date_time_range", date_time_range_array)
+                return jsonify({'results': date_time_range_array})
+            else:
+                redis_date_time_range_q = conn.get("date_time_range")
+                return redis_date_time_range_q
         if args['type']==None:
             date_time_region_range_array=[]
-            date_time_region_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time']}, 'regions.region': args['region']})
-            for all_data in date_time_region_range_q:
-                for region_data_array in all_data['regions']:
-                    for get_price_data in region_data_array:
-                        if get_price_data == 'instanceTypes':
-                            for get_type_data_array in region_data_array[get_price_data]: 
-                                date_time_region_range_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
-            return jsonify({'results': date_time_region_range_array})
+            if conn.get("date_time_region_range") ==None:
+                date_time_region_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time']}, 'regions.region': args['region']})
+                for all_data in date_time_region_range_q:
+                    for region_data_array in all_data['regions']:
+                        for get_price_data in region_data_array:
+                            if get_price_data == 'instanceTypes':
+                                for get_type_data_array in region_data_array[get_price_data]: 
+                                    date_time_region_range_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
+                conn.set("date_time_region_range", date_time_region_range_array)
+                return jsonify({'results': date_time_region_range_array})
+            else:
+                redis_date_time_region_q = conn.get("date_time_region_range")
+                return redis_date_time_region_q
         else:
             type_array=[]
-            date_time_region_type_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time']}, 'regions.region': args['region']})
-            for all_data in date_time_region_type_range_q:
-                for region_data_array in all_data['regions']:
-                    for get_price_data in region_data_array:
-                         if get_price_data == 'instanceTypes':
-                            for get_type_data_array in region_data_array[get_price_data]:                    
-                                if get_type_data_array['type'] == args['type']:
-                                    type_array.append({'region':region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
-            return jsonify({'results': type_array})
+            if conn.get("type_range") ==None:
+                date_time_region_type_range_q = collection.find({'date': {'$gte': args['min_date'], '$lte': args['max_date']}, 'time': {'$gte': args['min_time'], '$lte': args['max_time']}, 'regions.region': args['region']})
+                for all_data in date_time_region_type_range_q:
+                    for region_data_array in all_data['regions']:
+                        for get_price_data in region_data_array:
+                            if get_price_data == 'instanceTypes':
+                                for get_type_data_array in region_data_array[get_price_data]:                    
+                                    if get_type_data_array['type'] == args['type']:
+                                        type_array.append({'region':region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
+                conn.set("type_range", type_array)
+                return jsonify({'results': type_array})
+            else:
+                redis_type_q = conn.get("type_range")
+                return redis_type_q
 
 @app.route('/api/v1.0/query_more')
 @auth.login_required
