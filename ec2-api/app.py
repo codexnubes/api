@@ -96,45 +96,56 @@ def get_data():
 @auth.login_required
 def get_region(region):
     region_array=[]
-    
-    query = collection.find()
-    for all_data in query:
-        for region_data_array in all_data:
-            if region_data_array == "regions":
-                for get_price_data in all_data[region_data_array][0]['instanceTypes']:
-                    region_array.append({'region':region, 'date': all_data['date'], 'time': all_data['time'], 'currency': all_data['currency'], 'os':get_price_data["os"], 'type':get_price_data['type'], 'price': get_price_data['price'], 'utilization': get_price_data['utilization']})
-
-    return jsonify({'result': region_array})
+    if conn.get("cache_region_query") ==None:
+        query = collection.find()
+        for all_data in query:
+            for region_data_array in all_data:
+                if region_data_array == "regions":
+                    for get_price_data in all_data[region_data_array][0]['instanceTypes']:
+                        region_array.append({'region':region, 'date': all_data['date'], 'time': all_data['time'], 'currency': all_data['currency'], 'os':get_price_data["os"], 'type':get_price_data['type'], 'price': get_price_data['price'], 'utilization': get_price_data['utilization']})
+        conn.set("query_region_query", region_array)
+        return jsonify({'result': region_array})
+    else:
+        redis_region_q = conn.get("cache_region_query")
+        return redis_region_q
 
 @app.route('/api/v1.0/get_family/<family>', methods=['GET'])
 @auth.login_required
 def get_family(family):
     family_array=[]
-
-    query = collection.find()
-    for all_data in query:
-        for region_data_array in all_data['regions']:
-            for get_price_data in region_data_array:
-                if get_price_data == 'instanceTypes':
-                    for get_family_data_array in region_data_array[get_price_data]:                    
-                        if get_family_data_array['type'] == family:
-                            family_array.append(get_family_data_array)
-    return jsonify({'result': family_array})
+    if conn.get("cache_family_query") ==None:
+        query = collection.find()
+        for all_data in query:
+            for region_data_array in all_data['regions']:
+                for get_price_data in region_data_array:
+                    if get_price_data == 'instanceTypes':
+                        for get_family_data_array in region_data_array[get_price_data]:                    
+                            if get_family_data_array['type'] == family:
+                                family_array.append(get_family_data_array)
+        conn.set("cache_family_query", family_array)
+        return jsonify({'result': family_array})
+    else:
+        redis_family_q = conn.get("cache_family_query")
+        return redis_family_q
 
 @app.route('/api/v1.0/get_os/<os>', methods=['GET'])
 @auth.login_required
 def get_os(os):
     os_array=[]
-
-    query = collection.find()
-    for all_data in query:
-        for region_data_array in all_data['regions']:
-            for get_price_data in region_data_array:
-                if get_price_data == 'instanceTypes':
-                    for get_os_data_array in region_data_array[get_price_data]:                       
-                        if get_os_data_array['os'] == os:
-                            os_array.append(get_os_data_array)
-    return jsonify({'result': os_array})
+    if conn.get("cache_os_query") ==None:
+        query = collection.find()
+        for all_data in query:
+            for region_data_array in all_data['regions']:
+                for get_price_data in region_data_array:
+                    if get_price_data == 'instanceTypes':
+                        for get_os_data_array in region_data_array[get_price_data]:                       
+                            if get_os_data_array['os'] == os:
+                                os_array.append(get_os_data_array)
+        conn.set("cache_os_query", os_array)
+        return jsonify({'result': os_array})
+    else:
+        redis_os_q = conn.get("cache_os_query")
+        return redis_os_q
 
 @app.route('/api/v1.0/query')
 @auth.login_required
