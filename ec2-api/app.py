@@ -177,34 +177,52 @@ def run():
                 redis_date_q = conn.get("query_date")
                 return jsonify({'results': redis_date_q})
         if args['os']==None and args['type']==None and args['region']==None:
+            time_query_array=[]
             if conn.get("query_time") == None:
                 time_query = collection.find({'date':args['date'],'time':args['time']})
-                time_query_json = json_util.dumps(time_query)
-                conn.set("query_time", time_query_json)
-                return time_query_json
+                for all_data in time_query:
+                    for region_data_array in all_data['regions']:
+                        for get_price_data in region_data_array:
+                            if get_price_data == 'instanceTypes':
+                                for get_type_data_array in region_data_array[get_price_data]:
+                                    time_query_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
+                conn.set("query_time", time_query_array)
+                return jsonify({'results': time_query_array}) 
             else:
                 redis_time_q = conn.get("query_time")
-                return redis_time_q
+                return jsonify({'results': redis_time_q})
         if args['type']==None and args['region']==None:
+            os_query_array=[]
             if conn.get("query_os") == None:
                 os_query = collection.find({'date':args['date'],'time':args['time'],'regions.instanceTypes.os':args['os']})
-                os_query_json = json_util.dumps(os_query)
-                conn.set("query_os", os_query_json)
-                return os_query_json
+                for all_data in os_query:
+                    for region_data_array in all_data['regions']:
+                        for get_price_data in region_data_array:
+                            if get_price_data == 'instanceTypes':
+                                for get_type_data_array in region_data_array[get_price_data]:
+                                    os_query_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
+                conn.set("query_os", os_query_array)
+                return jsonify({'results': os_query_array})
             else:
                 redis_os_q = conn.get("query_os")
-                return redis_os_q
+                return jsonify({'results': redis_os_q})
         elif args['type'] ==None:
+            region_qurey_array=[]
             if conn.get("query_region") == None:
                 region_query = collection.find({'date':args['date'],'time':args['time'],'regions.instanceTypes.os':args['os'],'regions.region':args['region']})
-                region_query_json = json_util.dumps(region_query)
-                conn.set("query_region", region_query_json)
-                return region_query_json
+                for all_data in region_query:
+                    for region_data_array in all_data['regions']:
+                        for get_price_data in region_data_array:
+                            if get_price_data == 'instanceTypes':
+                                for get_type_data_array in region_data_array[get_price_data]:
+                                    region_qurey_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
+                conn.set("query_region", region_qurey_array)
+                return jsonify({'results': region_query_json})
             else:
                 redis_region_q = conn.get("query_region")
-                return redis_region_q
+                return jsonify({'results': redis_region_q})
         else:
-            if conn.get("query_type") == None: 
+            if conn.get("query_type") == None:
                 x = collection.find_one({'date':args['date'],'time':args['time'],'regions.instanceTypes.os':args['os'],'regions.region':args['region']})
                 if x!=None and x['regions']!=None and x['regions'][0]!=None:
                     for instance in x['regions'][0]['instanceTypes']:
