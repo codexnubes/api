@@ -329,34 +329,49 @@ def query_more():
     else:
         if args['regions']==None and args['types']==None:
             date_query_more_array=[]
-            date_query_more = collection.find({'date':args['date']})
-            for all_data in date_query_more:
-                    for region_data_array in all_data['regions']:
-                        for get_price_data in region_data_array:
-                            if get_price_data == 'instanceTypes':
-                                for get_type_data_array in region_data_array[get_price_data]: 
-                                    date_query_more_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
-            return jsonify({'results': date_query_more_array})
+            if conn.get("query_more_date") ==None:
+                date_query_more = collection.find({'date':args['date']})
+                for all_data in date_query_more:
+                        for region_data_array in all_data['regions']:
+                            for get_price_data in region_data_array:
+                                if get_price_data == 'instanceTypes':
+                                    for get_type_data_array in region_data_array[get_price_data]: 
+                                        date_query_more_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
+                conn.set("query_more_date", date_query_more_array)
+                return jsonify({'results': date_query_more_array})
+            else:
+                redis_date_query_more_q = conn.get("query_more_date")
+                return jsonify({'results': redis_date_query_more_q})
         if args['types']==None:
             regions_query_more_array=[]
-            regions_query_more = collection.find({'date':args['date'], 'regions.region': {'$all': args['regions']}})
-            for all_data in regions_query_more:
-                    for region_data_array in all_data['regions']:
-                        for get_price_data in region_data_array:
-                            if get_price_data == 'instanceTypes':
-                                for get_type_data_array in region_data_array[get_price_data]: 
-                                    regions_query_more_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
-            return jsonify({'results': regions_query_more_array})
+            if conn.get("query_more_regions") ==None:
+                regions_query_more = collection.find({'date':args['date'], 'regions.region': {'$all': args['regions']}})
+                for all_data in regions_query_more:
+                        for region_data_array in all_data['regions']:
+                            for get_price_data in region_data_array:
+                                if get_price_data == 'instanceTypes':
+                                    for get_type_data_array in region_data_array[get_price_data]: 
+                                        regions_query_more_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
+                conn.set("query_more_regions", regions_query_more_array)
+                return jsonify({'results': regions_query_more_array})
+            else:
+                redis_regions_qurey_more_q = conn.get("query_more_regions")
+                return jsonify({'results': redis_regions_qurey_more_q})
         if args['date']!=None and args['regions']!=None and args['types']!=None:
             types_query_more_array=[]
-            types_query_more = collection.find({'date':args['date'],'regions.region': {'$all': args['regions']},'regions.instanceTypes.type': {'$all': args['types']}})
-            for all_data in types_query_more:
-                    for region_data_array in all_data['regions']:
-                        for get_price_data in region_data_array:
-                            if get_price_data == 'instanceTypes':
-                                for get_type_data_array in region_data_array[get_price_data]: 
-                                    types_query_more_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']}) 
-            return jsonify({'results': types_query_more_array})
+            if conn.get("query_more_types") ==None:
+                types_query_more = collection.find({'date':args['date'],'regions.region': {'$all': args['regions']},'regions.instanceTypes.type': {'$all': args['types']}})
+                for all_data in types_query_more:
+                        for region_data_array in all_data['regions']:
+                            for get_price_data in region_data_array:
+                                if get_price_data == 'instanceTypes':
+                                    for get_type_data_array in region_data_array[get_price_data]: 
+                                        types_query_more_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']}) 
+                conn.set("query_more_types", types_query_more_array)
+                return jsonify({'results': types_query_more_array})
+            else:
+                redis_types_query_more_q = conn.get("query_more_types")
+                return jsonify({'results': redis_types_query_more_q})
         else:
             return jsonify({'results': 'Input Error, Try again'})
             
