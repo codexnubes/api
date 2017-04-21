@@ -162,14 +162,20 @@ def run():
         return jsonify(date=args['date'],time=args['time'],os=args['os'],region = args['region'],type = args['type'])
     else:
         if args['time']==None and args['os']==None and args['type']==None and args['region'] == None:
+            date_query_array=[]
             if conn.get("query_date") == None:
                 date_query = collection.find({'date':args['date']})
-                date_query_json = json_util.dumps(date_query)
-                conn.set("query_date", date_query_json)
-                return date_query_json
+                for all_data in date_query:
+                    for region_data_array in all_data['regions']:
+                        for get_price_data in region_data_array:
+                            if get_price_data == 'instanceTypes':
+                                for get_type_data_array in region_data_array[get_price_data]:
+                                    date_query_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
+                conn.set("query_date", date_query_array)
+                return jsonify({'results': date_query_array})
             else:
                 redis_date_q = conn.get("query_date")
-                return redis_date_q
+                return jsonify({'results': redis_date_q})
         if args['os']==None and args['type']==None and args['region']==None:
             if conn.get("query_time") == None:
                 time_query = collection.find({'date':args['date'],'time':args['time']})
@@ -243,7 +249,7 @@ def query_range():
                 return jsonify({'results': date_range_array})
             else:
                 redis_date_range_q = conn.get("date_range")
-                return redis_date_range_q
+                return jsonify({'results': redis_date_range_q})
         if args['region']==None and args['type']==None:
             date_time_range_array=[]
             if conn.get("date_time_range") ==None:
@@ -258,7 +264,7 @@ def query_range():
                 return jsonify({'results': date_time_range_array})
             else:
                 redis_date_time_range_q = conn.get("date_time_range")
-                return redis_date_time_range_q
+                return jsonify({'results': redis_date_time_range_q})
         if args['type']==None:
             date_time_region_range_array=[]
             if conn.get("date_time_region_range") ==None:
@@ -273,7 +279,7 @@ def query_range():
                 return jsonify({'results': date_time_region_range_array})
             else:
                 redis_date_time_region_q = conn.get("date_time_region_range")
-                return redis_date_time_region_q
+                return jsonify({'results': redis_date_time_region_q})
         else:
             type_array=[]
             if conn.get("type_range") ==None:
@@ -289,7 +295,7 @@ def query_range():
                 return jsonify({'results': type_array})
             else:
                 redis_type_q = conn.get("type_range")
-                return redis_type_q
+                return jsonify({'results': redis_type_q})
 
 @app.route('/api/v1.0/query_more', methods=['GET'])
 @auth.login_required
