@@ -320,20 +320,43 @@ def query_range():
 def query_more():
     parser = reqparse.RequestParser()
     parser.add_argument('date', required=True, help= 'Required, Invalid Date Input')
-    parser.add_argument('regions', type=list, location='json', help= 'Invalid Reggions Input')
-    parser.add_argument('types', help= 'Invalid Type Input')
+    parser.add_argument('regions', type=list, location='json', help= 'Invalid Regions Input')
+    parser.add_argument('types', type=list, location='json', help= 'Invalid Types Input')
     args = parser.parse_args()
 
     if args['date']==None:
         return jsonify(date=args['date'],regions=args['regions'])
     else:
         if args['regions']==None and args['types']==None:
-            return json_util.dumps(collection.find({'date':args['date']}))
+            date_query_more_array=[]
+            date_query_more = collection.find({'date':args['date']})
+            for all_data in date_query_more:
+                    for region_data_array in all_data['regions']:
+                        for get_price_data in region_data_array:
+                            if get_price_data == 'instanceTypes':
+                                for get_type_data_array in region_data_array[get_price_data]: 
+                                    date_query_more_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
+            return jsonify({'results': date_query_more_array})
         if args['types']==None:
-            return json_util.dumps(collection.find({'date':args['date'], 'regions.region': {'$all': args['regions']}}))
+            regions_query_more_array=[]
+            regions_query_more = collection.find({'date':args['date'], 'regions.region': {'$all': args['regions']}})
+            for all_data in regions_query_more:
+                    for region_data_array in all_data['regions']:
+                        for get_price_data in region_data_array:
+                            if get_price_data == 'instanceTypes':
+                                for get_type_data_array in region_data_array[get_price_data]: 
+                                    regions_query_more_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']})
+            return jsonify({'results': regions_query_more_array})
         if args['date']!=None and args['regions']!=None and args['types']!=None:
-            regions_more_q = collection.find({'date':args['date'],'regions.region': {'$all': args['regions']},'regions.instanceTypes.type': {'$all': args['types']}})
-            return json_util.dumps(regions_more_q)
+            types_query_more_array=[]
+            types_query_more = collection.find({'date':args['date'],'regions.region': {'$all': args['regions']},'regions.instanceTypes.type': {'$all': args['types']}})
+            for all_data in types_query_more:
+                    for region_data_array in all_data['regions']:
+                        for get_price_data in region_data_array:
+                            if get_price_data == 'instanceTypes':
+                                for get_type_data_array in region_data_array[get_price_data]: 
+                                    types_query_more_array.append({'region': region_data_array['region'], 'date': all_data['date'], 'time': all_data['time'], 'os': get_type_data_array['os'], 'price': get_type_data_array['price'], 'type': get_type_data_array['type']}) 
+            return jsonify({'results': types_query_more_array})
         else:
             return jsonify({'results': 'Input Error, Try again'})
             
